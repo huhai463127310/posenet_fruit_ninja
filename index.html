@@ -1,37 +1,57 @@
 <html lang="zh">
   <head>
     <meta charset="UTF-8"/>
+    <link rel="stylesheet" href="images/index.css"> 
+    <title>水果忍者网页体感版</title>
     <!-- Load TensorFlow.js -->
-    <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@0.11.7"></script>
+    <!-- <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@0.11.7"></script> -->
+    <script src="http://127.0.0.1:8999/@tensorflow/tfjs@0.11.7.js"></script>
     <!-- Load Posenet -->
-    <script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/posenet@0.1.2"></script>
+    <!-- <script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/posenet@0.1.2"></script> -->
+    <script src="http://127.0.0.1:8999/tfjs-models/posenet@0.1.2.js"></script>
  </head>
 
   <body>
-    <div id="loading"></div>
-    <div id="info"></div>
-    <input id="clear" type="button" value="clear"/>
-    <div id="main" style="display:none">
-      <video id="video" playsinline style=" -moz-transform: scaleX(-1);
-          -o-transform: scaleX(-1);
-          -webkit-transform: scaleX(-1);
-          transform: scaleX(-1);
-          display: none;
-          ">
-      </video>
-      <canvas id="output" style="border:1px solid #000000;"/>
+    <div id="extra"></div>
+    <canvas id="view" width="640" height="480"></canvas>
+    <div id="desc">
+        <div id="browser"></div>
     </div>
+    <div id="posenet" style="">
+      <!-- <div id="loading"></div> -->
+      <button id="clear" type="button" style="width:100px;height:30px;">清空画布</button>
+      <div id="main" style="display:none">
+        <video id="video" playsinline style=" -moz-transform: scaleX(-1);
+            -o-transform: scaleX(-1);
+            -webkit-transform: scaleX(-1);
+            transform: scaleX(-1);
+            display: none;
+            ">
+        </video>
+        <canvas id="output" style="border:1px solid #000000;"/>
+      </div>
+    </div>
+    <div id="info" style="font-size:18pt;"></div>
   </body>
+  <script src="scripts/all.js"></script>
   <!-- Place your code in the script tag below. You can also use an external .js file -->
   <script>
-    const videoWidth = 600;//screen.width;
-    const videoHeight = 500;//screen.height;
+    const videoWidth = 640;//screen.width;
+    const videoHeight = 480;//screen.height;
     var actionCount = 0;
     var lastPair = null;
     var lastActionTime = 0;
     const actionSpanTime = 100;
-    const miniDistance = 10;
+    const miniDistance = 30;
+    const maxDistanceRatio = 0.3;
+    const maxDistance = 300;//maxDistanceRatio * videoWidth;
+    const leftRightMiniDistance= 10;
     var clearCanvas = true;
+
+    function showInfo(message){
+      info = document.getElementById("info");
+      info.innerHTML = message;
+    }
 
     function isAndroid() {
       return /Android/i.test(navigator.userAgent);
@@ -90,7 +110,7 @@
       },
       singlePoseDetection: {
         minPoseConfidence: 0.5,
-        minPartConfidence: 0.5,
+        minPartConfidence: 0.55,
       },
       multiPoseDetection: {
         maxPoseDetections: 5,
@@ -108,6 +128,7 @@
     };
 
     function detectPoseInRealTime(video, net) {
+      showInfo("开始检测姿势");
       const canvas = document.getElementById('output');
       const ctx = canvas.getContext('2d');
       // since images are being fed from a webcam
@@ -184,43 +205,46 @@
             // }
 
             if (guiState.output.showPoints) {
-              filteredKeypoints = filterKeypoints(["leftWrist", "rightWrist"],
+              filteredKeypoints = filterKeypoints(["rightWrist", "leftWrist" ],
                 keypoints, minPartConfidence);
               // console.log(JSON.stringify(filteredKeypoints));
               if(filteredKeypoints.length > 0){
+                currentPair = splitKeyPoints(filteredKeypoints);
                 if(lastPair == null){
-                  lastPair = splitKeyPoints(filteredKeypoints);
+                  lastPair = currentPair;
                   lastActionTime = now;
                 }else{
                   if(actionCount >= 2){
                     ctx.clearRect(0, 0, videoWidth, videoHeight);
                     actionCount = 0;
                   }
-                  currentPair = splitKeyPoints(filteredKeypoints);
-                  // left
-                  if(lastPair.left != null && currentPair.left != null &&
-                    calcDistance(lastPair.left, currentPair.left) >
-                    miniDistance){
-                    drawSegment([lastPair.left.position.y,
-                      lastPair.left.position.x],
-                      [currentPair.left.position.y,
-                      currentPair.left.position.x], "black", 1, ctx);
 
-                    lastPair.left = currentPair.left;
-                    actionCount++;
+                  // left
+                  if(lastPair.left != null && currentPair.left != null){
+                    leftDistance = calcDistance(lastPair.left, currentPair.left);
+                    if(leftDistance > miniDistance && leftDistance < maxDistance){
+                      drawSegment([lastPair.left.position.y,
+                        lastPair.left.position.x],
+                        [currentPair.left.position.y,
+                        currentPair.left.position.x], "black", 1, ctx);
+
+                      lastPair.left = currentPair.left;
+                      actionCount++;
+                    }
                   }
 
                   //right
-                  if(lastPair.right != null && currentPair.right != null &&
-                    calcDistance(lastPair.right, currentPair.right) >
-                    miniDistance){
-                    drawSegment([lastPair.right.position.y,
-                      lastPair.right.position.x],
-                      [currentPair.right.position.y,
-                      currentPair.right.position.x], "yellow", 1, ctx);
+                  if(lastPair.right != null && currentPair.right != null){
+                    rightDistance = calcDistance(lastPair.right, currentPair.right);
+                    if(rightDistance > miniDistance && rightDistance < maxDistance){
+                      drawSegment([lastPair.right.position.y,
+                        lastPair.right.position.x],
+                        [currentPair.right.position.y,
+                        currentPair.right.position.x], "DeepPink", 1, ctx);
 
-                    lastPair.right = currentPair.right;
-                    actionCount++;
+                      lastPair.right = currentPair.right;
+                      actionCount++;
+                    }
                   }
 
                   lastActionTime = now;
@@ -245,16 +269,16 @@
       }
 
       function calcDistance(point1, point2){
-        if(point1.position.x <= 0 || point1.position.x >= 600){
+        if(point1.position.x <= 0 || point1.position.x >= videoWidth){
           console.log("x1=" + point1.position.x);
         }
-        if(point2.position.x <= 0 || point2.position.x >= 600){
+        if(point2.position.x <= 0 || point2.position.x >= videoWidth){
           console.log("x2=" + point2.position.x);
         }
-        if(point1.position.y <= 0 || point1.position.y >= 500){
+        if(point1.position.y <= 0 || point1.position.y >= videoHeight){
           console.log("y1=" + point1.position.y);
         }
-        if(point2.position.y <=0 || point2.position.y >= 500){
+        if(point2.position.y <=0 || point2.position.y >= videoHeight){
           console.log("y2=" + point2.position.y);
         }
         diff = Math.sqrt(Math.pow(point1.position.x - point2.position.x, 2) +
@@ -265,7 +289,7 @@
 
       function splitKeyPoints(points){
         pair = {left: null, right: null};
-        for(i in points){
+        for(var i=0; i< points.length; i++){
           point = points[i];
           if(point.part.startsWith("left")){
             pair.left = point;
@@ -279,9 +303,9 @@
 
       function filterKeypoints(part_names, keypoints, minPartConfidence){
         result = [];
-        for(point_index in keypoints){
+        for(var point_index = 0; point_index < keypoints.length; point_index++){
           point = keypoints[point_index]
-          for(name_index in part_names){
+          for(var name_index = 0; name_index < part_names.length; name_index++){
             if(part_names[name_index] == point.part &&
               point.score > minPartConfidence){
               result.push(point);
@@ -289,10 +313,50 @@
           }
         }
 
-        return result;
+        // 过滤距离太近的点
+        pcList = permutate_and_combine(result);
+        filteredPoints = [];
+        for(var i=0; i < pcList.length; i++){
+          if(pcList[i].length == 2){
+            diff = calcDistance(pcList[i][0], pcList[i][1]);
+            if(diff > leftRightMiniDistance){
+              filteredPoints.push(pcList[i][0]);
+              filteredPoints.push(pcList[i][1]);
+            }else{
+              if(Math.floor(Math.random()*10)%2 == 0){
+                filteredPoints.push(pcList[i][0]);
+                console.log("两点距离太近：" + diff + " 丢弃：" + 1);
+              }else{
+                filteredPoints.push(pcList[i][1]);
+                console.log("两点距离太近：" + diff + " 丢弃：" + 0);
+              }
+
+            }
+          }
+        }
+
+        return filteredPoints;
       }
 
       poseDetectionFrame();
+    }
+
+    /**
+     * 排列组合
+     */
+    function permutate_and_combine(arr){
+      result = [];
+      if(arr.length > 1){
+        for(i = 0; i < arr.length - 1; i++){
+          for(j = i + 1; j < arr.length; j++){
+            result.push([arr[i], arr[j]]);
+          }
+        }
+      }else if(arr.length == 1){
+        result.push(arr);
+      }
+
+      return result;
     }
 
     // const color = 'red';
@@ -407,10 +471,10 @@
 
       // Load the PoseNet model weights with architecture 0.75
       const net = await posenet.load(0.75);
-      console.log("posenet load completed");
+      showInfo("posenet 模型加载完毕");
       guiState.net = net;
 
-      document.getElementById('loading').style.display = 'none';
+      // document.getElementById('loading').style.display = 'none';
       document.getElementById('main').style.display = 'block';
       document.getElementById('clear').onclick = function(){
         output = document.getElementById('output');
@@ -422,7 +486,7 @@
 
       try {
         video = await loadVideo();
-        console.log('load video completed');
+        showInfo('视频设备加载完毕');
       } catch (e) {
         let info = document.getElementById('info');
         info.textContent = 'this browser does not support video capture,' + 'or this device does not have a camera';
