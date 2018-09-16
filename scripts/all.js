@@ -7,6 +7,7 @@
 
 void function(global){
 	var mapping = {}, cache = {};
+	var ctx = {global: global};
 	global.startModule = function(m){
 		require(m).start();
 	};
@@ -19,7 +20,7 @@ void function(global){
 		if(cache[id])
 			return cache[id];
 		else
-			return cache[id] = mapping[id]({});
+			return cache[id] = mapping[id]({}, ctx);
 	};
 }(this);
 
@@ -38,7 +39,10 @@ define("scripts/collide.js", function(exports){
 	
 	exports.check = function( knife ){
 		var ret = [], index = 0;
-	
+		if(!knife){
+			console.log("knife: " + knife)
+			return ret;
+		}
 		fruits.forEach(function( fruit ){
 		    var ck = lineInEllipse(
 		    	knife.slice( 0, 2 ), 
@@ -115,7 +119,7 @@ define("scripts/collide.js", function(exports){
 /**
  * @source D:\hosting\demos\fruit-ninja\output\scripts\control.js
  */ 
-define("scripts/control.js", function(exports){
+define("scripts/control.js", function(exports, ctx){
 	var Ucren = require("scripts/lib/ucren");
 	var knife = require("scripts/object/knife");
 	var message = require("scripts/message");
@@ -135,7 +139,9 @@ define("scripts/control.js", function(exports){
 	    var dragger = new Ucren.BasicDrag({ type: "calc" });
 	
 	    dragger.on( "returnValue", function( dx, dy, x, y, kf ){
-	    	if( kf = knife.through( x - canvasLeft, y - canvasTop ) )
+			if( kf = knife.through( x - canvasLeft, y - canvasTop ) )
+				// DEBUG
+				console.log("dx=" + dx + " dy=" + dy + " x=" + x + " y=" + y);
 	            message.postMessage( kf, "slice" );
 	    });
 	
@@ -143,7 +149,30 @@ define("scripts/control.js", function(exports){
 	        knife.newKnife();
 	    });
 	
-	    dragger.bind( document.documentElement );
+		dragger.bind( document.documentElement );
+		
+		// 注册人体拖拽
+		var draggers = ctx.global.personDraggers;
+
+		for(var i  = 0; i < personDraggers.length; i++){
+			var personDragger = personDraggers[i];
+			var parts = ["left", "right"];
+			for(var partIdx = 0; partIdx < parts.length; partIdx++){
+				var part = parts[partIdx]; 
+				var dragger = personDragger[part];
+
+				dragger.on( "returnValue", function( dx, dy, x, y, kf ){
+					if( kf = knife.through( x - canvasLeft, y - canvasTop ) )
+						// DEBUG
+						console.log("dx=" + dx + " dy=" + dy + " x=" + x + " y=" + y);
+						message.postMessage( kf, "slice" );
+				});
+			
+				dragger.on( "startDrag", function(){
+					knife.newKnife();
+				});
+			}
+		}
 	};
 	
 	exports.installClicker = function(){
@@ -585,6 +614,7 @@ define("scripts/sence.js", function(exports){
 	exports.init = function(){
 	    menuSnd = sound.create( "sound/menu" );
 	    gameStartSnd = sound.create( "sound/start" );
+		// [ background, homeMask, logo, ninja, homeDesc, dojo, newSign, newGame, quit, score, lose, developing, gameOver, flash /*, fps */ ].invoke( "set" );
 		[ background, homeMask, logo, ninja, homeDesc, dojo, newSign, newGame, quit, score, lose, developing, gameOver, flash /*, fps */ ].invoke( "set" );
 	    // setInterval( fps.update.bind( fps ), 500 );
 	};
@@ -635,7 +665,9 @@ define("scripts/sence.js", function(exports){
 	    boom = fruit.create( "boom", 552, 367, true, 2500 );
 	
 	    [ peach, sandia, boom ].forEach(function( f ){ f.isHomeMenu = 1; });
+	    // [ sandia, boom ].forEach(function( f ){ f.isHomeMenu = 1; });
 	    peach.isDojoIcon = sandia.isNewGameIcon = boom.isQuitIcon = 1;
+	    // sandia.isNewGameIcon = boom.isQuitIcon = 1;
 	
 	    var group = [
 	    	[ homeMask, 0 ], 
@@ -2895,8 +2927,14 @@ define("scripts/lib/ucren.js", function(exports){
 	    	this.forEach( function( item ){
 		    	if( item instanceof Array )
 		    	    item[0][method].apply( item[0], item.slice( 1 ) );
-		    	else
-		    		item[method].apply( item, args );
+		    	else{
+					//DEBUG
+					if(!item || !method in item){
+						console.log(method + " not found in " + item);
+					}else{
+						item[method].apply( item, args );
+					}
+				}
 		    });
 		    return this;
 		};
@@ -4250,6 +4288,7 @@ define("scripts/object/flame.js", function(exports){
 	  		},
 	
 	  		remove: function(){
+				// DEBUG
 	  		    [ timer1, timer2 ].invoke( "stop" );
 	  		    image.remove();
 	
@@ -4506,7 +4545,10 @@ define("scripts/object/knife.js", function(exports){
 		return this;
 	};
 	
+	// 光影两端变尖效果
 	ClassKnifePart.prototype.update = function( time ){
+		//DEBUG
+		console.log("time=" + time);
 		this.line.attr( "stroke-width", stroke * (1 - time / life) + "px" );
 	};
 	
@@ -4614,7 +4656,8 @@ define("scripts/object/light.js", function(exports){
 	    	},
 	
 	    	onTimeEnd: function(){
-	    	    mask.remove();
+				mask.remove();
+				//DEBUG
 	    	    message.postMessage( "game.over" );
 	    	}
 	    };
@@ -4731,8 +4774,8 @@ define("scripts/object/lose.js", function(exports){
 	};
 	
 	exports.showLoseAt = function( x ){
-	
-	    var infx, inf = [
+		//DEBUG 注释掉大于3个没有切掉的水果时结束游戏的逻辑
+	    /* var infx, inf = [
 	        [ o1, conf1 ],
 	        [ o2, conf2 ],
 	        [ o3, conf3 ]
@@ -4743,9 +4786,11 @@ define("scripts/object/lose.js", function(exports){
 	    infx = inf[ ( ++ number ) - 1 ];
 	    infx[0].attr( "src", infx[1].src.replace( "x.png", "xf.png" ) ).scale( 1e-5, 1e-5 );
 	    this.scaleImage( infx[0] );
-	    
+		
+		
 	    if( number == 3 )
-	        message.postMessage( "game.over" );
+			message.postMessage( "game.over" );
+		*/
 	};
 	
 	exports.scaleImage = function( image ){
