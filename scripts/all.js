@@ -138,8 +138,8 @@ define("scripts/control.js", function(exports, ctx){
 	exports.installDragger = function(){
 	    var dragger = new Ucren.BasicDrag({ type: "calc" });
 	
-	    dragger.on( "returnValue", function( dx, dy, x, y, kf ){
-			if( kf = knife.through( x - canvasLeft, y - canvasTop ) )
+	    dragger.on( "returnValue", function( dx, dy, x, y, kf){
+			if( kf = knife.through( x - canvasLeft, y - canvasTop) )
 				// DEBUG
 				console.log("dx=" + dx + " dy=" + dy + " x=" + x + " y=" + y);
 	            message.postMessage( kf, "slice" );
@@ -161,10 +161,10 @@ define("scripts/control.js", function(exports, ctx){
 				var part = parts[partIdx]; 
 				var dragger = personDragger[part];
 
-				dragger.on( "returnValue", function( dx, dy, x, y, kf ){
-					if( kf = knife.through( x - canvasLeft, y - canvasTop ) )
+				dragger.on( "returnValue", function( dx, dy, x, y, kf, part){
+					if( kf = knife.through( x - canvasLeft, y - canvasTop, part ) )
 						// DEBUG
-						console.log("dx=" + dx + " dy=" + dy + " x=" + x + " y=" + y);
+						console.log("part=" + part + " dx=" + dx + " dy=" + dy + " x=" + x + " y=" + y);
 						message.postMessage( kf, "slice" );
 				});
 			
@@ -4498,8 +4498,8 @@ define("scripts/object/knife.js", function(exports){
 	 */
 	
 	var lastX = null, lastY = null;
+	var lastXY = {left: {lastX:null, lastY: null }, right: {lastX: null, lastY: null } };
 	var abs = Math.abs;
-	
 	var life = 200;
 	var stroke = 10;
 	var color = "#cbd3db";
@@ -4561,19 +4561,36 @@ define("scripts/object/knife.js", function(exports){
 	};
 	
 	exports.newKnife = function(){
-	    lastX = lastY = null;
+		lastX = lastY = null;
+		lastXY.left.lastX = null;
+		lastXY.left.lastY = null;
+		lastXY.right.lastX = null;
+		lastXY.right.lastY = null;
 	};
 	
-	exports.through = function( x, y ){
+	exports.through = function( x, y, part=null ){
 		if( !switchState )
 			return ;
 		var ret = null;
-		if( lastX !== null && ( lastX != x || lastY != y ) )
+		if( part == undefined || part === null){
+			if( lastX !== null && ( lastX != x || lastY != y ) )
 		    new ClassKnifePart({ sx: lastX, sy: lastY, ex: x, ey: y }).set(),
 			ret = [ lastX, lastY, x, y ];
 	
-		lastX = x;
-		lastY = y;
+			lastX = x;
+			lastY = y;
+		}else{
+			if(part == 'right'){
+				console.log("fire right");
+			}
+			if( lastXY[part].lastX !== null && ( lastXY[part].lastX != x || lastXY[part].lastY != y ) )
+		    new ClassKnifePart({ sx: lastXY[part].lastX, sy: lastXY[part].lastY, ex: x, ey: y }).set(),
+			ret = [ lastXY[part].lastX, lastXY[part].lastY, x, y ];
+	
+			lastXY[part].lastX = x;
+			lastXY[part].lastY = y;
+		}
+		
 		return ret;
 	};
 	

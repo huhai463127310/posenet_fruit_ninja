@@ -10,7 +10,7 @@
     const maxDistance = 300; //maxDistanceRatio * videoWidth;
     const leftRightMiniDistance = 10;
     var clearCanvas = true;
-    var xOffset = 0;
+    var xOffset = videoWidth/2;
     var yOffset = 0;
 
     const guiState = {
@@ -221,9 +221,8 @@
                                             x = currentPair.left.position.x + xOffset, 
                                             y = currentPair.left.position.y + yOffset;
 
-                                        showInfo("x=" + x + ", y=" + y + ", distance=" + leftDistance);
-                                        
-                                        personDragger1.left.fire("returnValue", [dx, dy, x, y, null]);
+                                        // showInfo("x=" + x + ", y=" + y + ", distance=" + leftDistance);
+                                        // personDragger1.left.fire("returnValue", [dx, dy, x, y, null, 'left']);
                                         
                                         drawSegment([lastPair.left.position.y,
                                                 lastPair.left.position.x
@@ -245,9 +244,9 @@
                                             dy = currentPair.right.position.y - lastPair.right.position.y,
                                             x = currentPair.right.position.x + xOffset, 
                                             y = currentPair.right.position.y + yOffset;
-                                        // personDragger1.right.fire("startDrag", []);
+
                                         // showInfo("x=" + x + ", y=" + y);
-                                        // personDragger1.right.fire("returnValue", [dx, dy, x, y, null]);
+                                        personDragger1.right.fire("returnValue", [dx, dy, x, y, null]);
                                         drawSegment([lastPair.right.position.y,
                                                 lastPair.right.position.x
                                             ],
