@@ -588,7 +588,7 @@
         })
     }
     // var X = "https://storage.googleapis.com/tfjs-models/weights/posenet/",
-    var X = document.location.protocol + "//" + window.location.host + "/tfjs-models/weights/posenet/",
+    var X = document.location.protocol + "//" + window.location.host + "/posenet_fruit_ninja/tfjs-models/weights/posenet/",
         Y = {
             1.01: {
                 url: X + "mobilenet_v1_101/",
