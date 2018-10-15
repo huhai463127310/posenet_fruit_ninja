@@ -12,6 +12,10 @@
  </head>
 
   <body>
+    <div style="width:100%;position:fixed;text-align:center;color:#ffffff;">
+        <p>保证摄像头处于未禁用状态，正对摄像头站立，保证左上角摄像头窗口可看见你的上半身，挥舞手臂，划掉New Game。</p>
+        <p>挥舞你的手！挥舞你的手！挥舞你的手！</p>
+    </div>
     <div id="extra"></div>
     <canvas id="view" width="640" height="480"></canvas>
     <div id="desc">
@@ -35,12 +39,12 @@
               height: 80px;
               ">
           </video>
-          <button id="clear" type="button" style="width:100px;height:30px;">清空画布</button>
+          <button id="clear" type="button" style="width:100px;height:30px;">清除轨迹</button>
         </div>
         <canvas id="output" style="border:1px solid #000000;"/>
       </div>
     </div>
-    <div id="info" style="font-size:16pt;"></div>
+    <div id="info" style="font-size:12pt;color:#ffffff;"></div>
   </body>
   <script src="scripts/pose.js"></script>
   <script src="scripts/all.js"></script>

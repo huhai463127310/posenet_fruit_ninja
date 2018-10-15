@@ -10,8 +10,8 @@
     const maxDistance = 300; //maxDistanceRatio * videoWidth;
     const leftRightMiniDistance = 10;
     var clearCanvas = true;
-    var xOffset = videoWidth/2;
-    var yOffset = 30;
+    var xOffset = (screen.availWidth - videoWidth)/2;
+    var yOffset = (screen.availHeight - videoHeight)/3;
 
     const guiState = {
         // algorithm: 'multi-pose',
