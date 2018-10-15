@@ -162,15 +162,22 @@ define("scripts/control.js", function(exports, ctx){
 				var dragger = personDragger[part];
 
 				dragger.on( "returnValue", function( dx, dy, x, y, kf, part){
-					if( kf = knife.through( x - canvasLeft, y - canvasTop, part ) )
+					if( kf = knife.through( x - canvasLeft, y - canvasTop ) ){
 						// DEBUG
 						console.log("part=" + part + " dx=" + dx + " dy=" + dy + " x=" + x + " y=" + y);
 						message.postMessage( kf, "slice" );
+					}
+
+					// 游戏结束后挥手回到主界面
+					if( state( "click-enable" ).ison() ){
+						message.postMessage( "click" );
+					}
 				});
 			
 				dragger.on( "startDrag", function(){
 					knife.newKnife();
 				});
+
 			}
 		}
 	};
@@ -499,8 +506,8 @@ define("scripts/main.js", function(exports){
 	
 	var tip = "";
 	
-	if( !Ucren.isChrome )
-	    tip = "$为了获得最佳流畅度，推荐您使用 <span class='b'>Google Chrome</span> 体验本游戏";
+	if( !(Ucren.isChrome || Ucren.isFirefox))
+	    tip = "$<span style='color:red;font-size:16pt;top:40px;'>请使用最新版本 <span class='b'>Google Chrome</span> 或 <span class='b'>Firefox</span> 体验本游戏</span>";
 	
 	if( !buzz.isSupported() )
 	    tip = tip.replace( "$", "您的浏览器不支持 &lt;audio&gt 播放声效，且" );

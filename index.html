@@ -19,21 +19,28 @@
     </div>
     <div id="posenet" style="">
       <!-- <div id="loading"></div> -->
-      <button id="clear" type="button" style="width:100px;height:30px;">清空画布</button>
-      <div id="main" style="display:none">
-        <video id="video" playsinline style=" -moz-transform: scaleX(-1);
-            -o-transform: scaleX(-1);
-            -webkit-transform: scaleX(-1);
-            transform: scaleX(-1);
-            display: block;
-            width: 100px;
-            height: 80px;
-            ">
-        </video>
+      
+      <div id="main" style="display:none;z-index:99999999;">
+        <div style="width:105px; padding:4px; background-color: #ffffff;">
+          <form>
+            <label><input type="radio" name="hand" value="left"/>左手</label>
+            <label><input type="radio" name="hand" value="right" checked="checked"/>右手</label>
+          </form>
+          <video id="video" playsinline style=" -moz-transform: scaleX(-1);
+              -o-transform: scaleX(-1);
+              -webkit-transform: scaleX(-1);
+              transform: scaleX(-1);
+              display: block;
+              width: 100px;
+              height: 80px;
+              ">
+          </video>
+          <button id="clear" type="button" style="width:100px;height:30px;">清空画布</button>
+        </div>
         <canvas id="output" style="border:1px solid #000000;"/>
       </div>
     </div>
-    <div id="info" style="font-size:18pt;"></div>
+    <div id="info" style="font-size:16pt;"></div>
   </body>
   <script src="scripts/pose.js"></script>
   <script src="scripts/all.js"></script>

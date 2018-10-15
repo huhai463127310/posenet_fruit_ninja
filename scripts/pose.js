@@ -11,7 +11,7 @@
     const leftRightMiniDistance = 10;
     var clearCanvas = true;
     var xOffset = videoWidth/2;
-    var yOffset = 0;
+    var yOffset = 30;
 
     const guiState = {
         // algorithm: 'multi-pose',
@@ -116,8 +116,16 @@
         return video;
     }
 
+    function getHand(){
+        var radios = document.getElementsByName("hand");
+        for(var i = 0; i < radios.length; i++){
+            if(radios[i].checked){
+                return radios[i].value;
+            }
+        }
+    }
+
     function detectPoseInRealTime(video, net) {
-        showInfo("开始检测姿势");
         const canvas = document.getElementById('output');
         const ctx = canvas.getContext('2d');
         // since images are being fed from a webcam
@@ -213,7 +221,7 @@
                                 }
 
                                 // left
-                                if (lastPair.left != null && currentPair.left != null) {
+                                if ("left" == getHand() && lastPair.left != null && currentPair.left != null) {
                                     leftDistance = calcDistance(lastPair.left, currentPair.left);
                                     if (leftDistance > miniDistance && leftDistance < maxDistance) {
                                         var dx = currentPair.left.position.x - lastPair.left.position.x,
@@ -222,7 +230,7 @@
                                             y = currentPair.left.position.y + yOffset;
 
                                         // showInfo("x=" + x + ", y=" + y + ", distance=" + leftDistance);
-                                        // personDragger1.left.fire("returnValue", [dx, dy, x, y, null, 'left']);
+                                        personDragger1.left.fire("returnValue", [dx, dy, x, y, null, 'left']);
                                         
                                         drawSegment([lastPair.left.position.y,
                                                 lastPair.left.position.x
@@ -237,7 +245,7 @@
                                 }
 
                                 //right
-                                if (lastPair.right != null && currentPair.right != null) {
+                                if ("right" == getHand() && lastPair.right != null && currentPair.right != null) {
                                     rightDistance = calcDistance(lastPair.right, currentPair.right);
                                     if (rightDistance > miniDistance && rightDistance < maxDistance) {
                                         var dx = currentPair.right.position.x - lastPair.right.position.x,
@@ -246,7 +254,7 @@
                                             y = currentPair.right.position.y + yOffset;
 
                                         // showInfo("x=" + x + ", y=" + y);
-                                        personDragger1.right.fire("returnValue", [dx, dy, x, y, null]);
+                                        personDragger1.right.fire("returnValue", [dx, dy, x, y, null, 'right']);
                                         drawSegment([lastPair.right.position.y,
                                                 lastPair.right.position.x
                                             ],
@@ -306,10 +314,11 @@
             };
             for (var i = 0; i < points.length; i++) {
                 point = points[i];
+                // 左右手是反的
                 if (point.part.startsWith("left")) {
-                    pair.left = point;
-                } else if (point.part.startsWith("right")) {
                     pair.right = point;
+                } else if (point.part.startsWith("right")) {
+                    pair.left = point;
                 }
             }
 
@@ -491,6 +500,7 @@
     async function bindPage() {
 
         // Load the PoseNet model weights with architecture 0.75
+        showInfo("正在加载 posenet 模型...");
         const net = await posenet.load(0.75);
         showInfo("posenet 模型加载完毕");
         guiState.net = net;
@@ -506,15 +516,17 @@
         let video;
 
         try {
+            showInfo('正在加载视频设备...');
             video = await loadVideo();
             showInfo('视频设备加载完毕');
         } catch (e) {
             let info = document.getElementById('info');
-            info.textContent = 'this browser does not support video capture,' + 'or this device does not have a camera';
+            info.textContent = '此浏览器不支持视频捕捉或者此设备没有摄像头';
             info.style.display = 'block';
             throw e;
         }
 
+        showInfo("开始检测姿势");
         detectPoseInRealTime(video, net);
     }
 
