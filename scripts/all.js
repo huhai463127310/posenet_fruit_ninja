@@ -40,7 +40,7 @@ define("scripts/collide.js", function(exports){
 	exports.check = function( knife ){
 		var ret = [], index = 0;
 		if(!knife){
-			console.log("knife: " + knife)
+			// console.log("knife: " + knife)
 			return ret;
 		}
 		fruits.forEach(function( fruit ){
@@ -139,9 +139,10 @@ define("scripts/control.js", function(exports, ctx){
 	    var dragger = new Ucren.BasicDrag({ type: "calc" });
 	
 	    dragger.on( "returnValue", function( dx, dy, x, y, kf){
+			// 坐标是鼠标坐标系，与游戏画布坐标系不一样，需要修正
 			if( kf = knife.through( x - canvasLeft, y - canvasTop) )
 				// DEBUG
-				console.log("dx=" + dx + " dy=" + dy + " x=" + x + " y=" + y);
+				// console.log("dx=" + dx + " dy=" + dy + " x=" + x + " y=" + y);
 	            message.postMessage( kf, "slice" );
 	    });
 	
@@ -162,9 +163,10 @@ define("scripts/control.js", function(exports, ctx){
 				var dragger = personDragger[part];
 
 				dragger.on( "returnValue", function( dx, dy, x, y, kf, part){
-					if( kf = knife.through( x - canvasLeft, y - canvasTop ) ){
+					// 此处姿势关键点坐标系本身与游戏画布坐标系对齐，不需要修正
+					if( kf = knife.through( x, y ) ){
 						// DEBUG
-						console.log("part=" + part + " dx=" + dx + " dy=" + dy + " x=" + x + " y=" + y);
+						// console.log("part=" + part + " dx=" + dx + " dy=" + dy + " x=" + x + " y=" + y);
 						message.postMessage( kf, "slice" );
 					}
 
@@ -4555,7 +4557,7 @@ define("scripts/object/knife.js", function(exports){
 	// 光影两端变尖效果
 	ClassKnifePart.prototype.update = function( time ){
 		//DEBUG
-		console.log("time=" + time);
+		// console.log("time=" + time);
 		this.line.attr( "stroke-width", stroke * (1 - time / life) + "px" );
 	};
 	
@@ -4587,9 +4589,9 @@ define("scripts/object/knife.js", function(exports){
 			lastX = x;
 			lastY = y;
 		}else{
-			if(part == 'right'){
-				console.log("fire right");
-			}
+			// if(part == 'right'){
+			// 	console.log("fire right");
+			// }
 			if( lastXY[part].lastX !== null && ( lastXY[part].lastX != x || lastXY[part].lastY != y ) )
 		    new ClassKnifePart({ sx: lastXY[part].lastX, sy: lastXY[part].lastY, ex: x, ey: y }).set(),
 			ret = [ lastXY[part].lastX, lastXY[part].lastY, x, y ];
