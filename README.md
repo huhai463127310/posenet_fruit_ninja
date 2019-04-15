@@ -6,7 +6,7 @@ Wave your hands.
 Wave your hands.  
 Have fun!
 
-# Demo
+# Play Demo
 [https://huhai463127310.github.io/posenet_fruit_ninja/](https://huhai463127310.github.io/posenet_fruit_ninja/)  
   
 ![Demo动图](posenet_fruit_nijia.gif)
